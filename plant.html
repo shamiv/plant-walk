@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    </head>
+    <style>
+     p { white-space: pre; }
+     body { font-family: "Courier", Courier, monospace;
+         font-size: 18px;
+         text-align: center;
+     }
+
+     .title {
+         text-align: center;
+         flex:1 0 auto;
+}
+
+     a:link {
+         color:#00CC66;
+         background-color: transparent;
+         text-decoration: none;
+}
+     a:visited {
+         color: #00CC66;
+         background-color: transparent;
+         text-decoration: none;
+}
+     a.back {
+         color:#FFFFFF ;
+         position: absolute;
+         left:10px;
+     }
+
+     .audio-container {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         border-width: 3px;
+         border-color: red;
+     }
+    </style>
+
+    <body bgcolor="#303030" text="#ffffff">
+        <a class="back" href="https://mishathings.com" display="flex" color="#FFFFFF" style="float:left">← Back to home page</a>
+        <h1 position="relative" display="flex align-items:center"; justify-content="center">Plant walk</h1>
+
+        <!-- <input type="button" onclick="https://mishathings.com" value="home" style="float: left;"> -->
+
+	      <div style="text-align:center">
+            New song + randomized videolip of a digital plant.<br><br>
+            1. Every step there is a 60% chance a random branch dies. But one branch always remains.<br>
+            2. Every step there is a 50% chance that a random branch sprouts a new branch.<br>
+            3. Branches move away from their nearest neighbour and don't like to be close to the edges.<br><br>
+            Scroll down to see plant history. Scroll up to catch up with the flow. To see how it works, view page source or click <a href="./planthtml.html">here</a>.
+
+        </div>
+
+        <br><br>
+        <div class='audio-container'>
+            <audio controls="controls" preload="none">
+                <source src="./data/plant_walk_full.mp3" type="audio/mpeg">
+            </audio>
+        </div>
+
+        <!-- <p style="text-align:center" id="plantwalk"></p> -->
+        <p style="color:#00CC66;text-align:center" id="plantwalk"></p>
+
+        <script>
+
+         /* --------------------------------------------------------------- */
+         /* functions to use later */
+         /* --------------------------------------------------------------- */
+
+         /* create random number */
+         function randomIntFromInterval(min, max) { 
+             return Math.floor(Math.random() * (max - min + 1) + min)
+         }
+
+         /* replace character in string */
+         function setCharAt(str,index,chr) {
+             if(index > str.length-1) return str;
+             return str.substring(0,index) + chr + str.substring(index+1);
+         }
+
+         /* take out double values */
+         function onlyUnique(value, index, self) {
+             return self.indexOf(value) === index;
+         }
+
+         /* find minimum of array */
+         Array.min = function( array ){
+             return Math.min.apply( Math, array );
+         };
+
+         /* find average */
+         const average = (array) => array.reduce((a, b) => a + b) / array.length;
+
+         /* --------------------------------------------------------------- */
+         /* plant walk initialisation */
+         /* --------------------------------------------------------------- */
+
+         let start_position = Math.floor(plantwalk.offsetLeft + plantwalk.offsetWidth / 13)
+         let position = [Math.floor(start_position/3)]
+
+         /* --------------------------------------------------------------- */
+         /* plant walk */
+         /* --------------------------------------------------------------- */
+         function moveposition () {
+
+             /* create line */
+             let line = " ".repeat(start_position)
+
+             /* one random branche dies */
+             if (position.length > 1){
+                 if (Math.random() < 0.6){
+                     position.splice(randomIntFromInterval(0,position.length-1),1);
+                 }
+             }
+
+             /* Create array of move directions for each branch */
+             move = Array.from({length: position.length}, () => randomIntFromInterval(-1,1))
+
+             /* Adjust move array to make branches move away from each other */
+             if (position.length > 1){
+                 for (var i = 0; i < position.length; i++) {
+                     diff = []
+                     for (var j = 0; j < position.length; j++) {
+                         if (!(i == j)){diff.push(Math.abs(position[i]-position[j]))}
+                         else
+                         {diff.push(NaN)}
+                     }
+                     let minimumValue = Math.min.apply(null, diff.filter(function(n) { return !isNaN(n); }))
+                     let ind = diff.indexOf(minimumValue);
+                     if ((position[i] - position[ind]) < 0)
+                     {move[i] = -1}
+                     else
+                     {move[i] = +1}
+                 }
+             }
+             /* Make the plant want to move away from the limits */
+             else
+             {if ((line.length - position) < (line.length/3))
+                 {move = [-1]
+                     /* console.log("right limit") */
+
+                 }
+                 else if (position < line.length/3)
+                 {move = [1]
+                     /* console.log("left limit") */
+             }}
+
+             /* adjust positions of branch, preventing them from overflowing the limits */
+             for (var i = 0; i < position.length; i++) {
+                 position[i] = position[i] + move[i]
+                 if (position[i] < 0){position[i] = 0}
+                 if (position[i] > line.length-2){position[i] = line.length-2}
+             }
+
+             /* Create new branches */
+             position = position.filter(onlyUnique);
+             if (Math.random() < 0.5){
+                 let index = randomIntFromInterval(0,position.length-1)
+                 if (Math.random < 0.5)
+                 {position.push(position[index]-1)}
+                 else
+                 {position.push(position[index]+1)}
+             }
+
+             /* Adjust the line and print it at the top of the website */
+             for (var i = 0; i < position.length; i++) {
+                 line = setCharAt(line, position[i], "█")}
+             /* line = setCharAt(line, position[i], "+")} */
+             plantwalk.insertAdjacentHTML('afterbegin', line + "<br>")
+         }
+
+         mvinterval = setInterval(moveposition,50)
+        </script>
+    </body>
+</html>
